@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>IG-AI-DM // Operation Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A1210;
+    --bg-raised:#132019;
+    --bg-panel:#0D1714;
+    --ink:#D2E4D7;
+    --ink-dim:#6F8B7D;
+    --ink-faint:#3C5247;
+    --amber:#F0A93E;
+    --amber-dim:rgba(240,169,62,0.12);
+    --alert:#E0473C;
+    --signal:#5FE3A0;
+    --line:#1E332A;
+    --line-soft:rgba(30,51,42,0.55);
+    --font-display:'Big Shoulders Display',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; -webkit-text-size-adjust:100%; }
+
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-mono);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    min-width:0;
+  }
+
+  a{ color:inherit; }
+
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible{
+    outline:2px solid var(--amber);
+    outline-offset:3px;
+  }
+
+  /* ---------- atmosphere ---------- */
+  .grain{
+    position:fixed; inset:0; z-index:55; pointer-events:none;
+    opacity:0.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .scanlines{
+    position:fixed; inset:0; z-index:56; pointer-events:none; opacity:0.4;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.16) 3px);
+  }
+  .vignette{
+    position:fixed; inset:0; z-index:54; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.55) 100%);
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    background:rgba(10,18,16,0.86);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1140px; margin:0 auto; padding:0.95rem 1.5rem;
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:0.7rem; font-size:0.8rem; letter-spacing:0.06em; white-space:nowrap; }
+  .status-dot{
+    width:8px; height:8px; border-radius:50%; background:var(--signal); flex-shrink:0;
+    box-shadow:0 0 10px var(--signal);
+    animation:pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.45; transform:scale(0.8); } }
+  .brand .dim{ color:var(--ink-dim); }
+  .tabs{ display:flex; gap:1.6rem; font-size:0.78rem; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:0.2rem; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabs a{ color:var(--ink-dim); text-decoration:none; letter-spacing:0.08em; white-space:nowrap; transition:color .2s; padding:0.2rem 0; flex-shrink:0; }
+  .tabs a:hover{ color:var(--amber); }
+
+  /* ---------- layout helpers ---------- */
+  .section{ max-width:1140px; margin:0 auto; padding:5.5rem 1.5rem; border-top:1px solid var(--line); }
+  .section:first-of-type{ border-top:none; }
+  .eyebrow{ font-size:0.72rem; letter-spacing:0.32em; color:var(--amber); text-transform:uppercase; margin-bottom:0.9rem; font-weight:600; }
+  .section h2{
+    font-family:var(--font-display); font-weight:850; font-size:clamp(2.1rem,5vw,3.4rem);
+    text-transform:uppercase; letter-spacing:0.01em; line-height:1.05; margin-bottom:1.1rem;
+    word-break:break-word;
+  }
+  .section-intro{ color:var(--ink-dim); max-width:38rem; line-height:1.8; margin-bottom:3rem; font-size:0.95rem; }
+
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.in-view{ opacity:1; transform:translateY(0); }
+
+  /* ---------- hero ---------- */
+  .hero{ max-width:1140px; margin:0 auto; padding:4.5rem 1.5rem 5.5rem; position:relative; overflow:hidden; }
+  .hero-grid{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:3.5rem; align-items:center; position:relative; z-index:2; }
+  .reticle{
+    position:absolute; right:-120px; top:-60px; width:min(520px, 90vw); height:min(520px, 90vw); z-index:1;
+    opacity:0.07; pointer-events:none;
+  }
+  .stamp-row{ display:flex; gap:0.6rem; margin-bottom:1.6rem; flex-wrap:wrap; }
+  .stamp{
+    font-size:0.68rem; letter-spacing:0.18em; padding:0.32rem 0.65rem;
+    border:1px solid var(--line); color:var(--ink-dim); text-transform:uppercase; font-weight:600;
+  }
+  .stamp-alert{ border-color:var(--alert); color:var(--alert); }
+  .hero h1{
+    font-family:var(--font-display); font-weight:900; font-size:clamp(2.2rem,8.5vw,5.6rem);
+    line-height:0.96; letter-spacing:0.005em; text-transform:uppercase; margin-bottom:1.3rem;
+    word-break:break-word;
+  }
+  .hero h1 .accent{ color:var(--amber); }
+  .lede{ color:var(--ink-dim); font-size:clamp(0.9rem, 2.5vw, 1.02rem); line-height:1.85; max-width:32rem; margin-bottom:2.2rem; }
+  .cta-row{ display:flex; gap:1rem; flex-wrap:wrap; }
+  .btn{
+    font-family:var(--font-mono); font-size:0.82rem; letter-spacing:0.06em; font-weight:600;
+    padding:0.85rem 1.7rem; border:1px solid var(--line); text-decoration:none;
+    display:inline-flex; align-items:center; gap:0.5rem; transition:all .25s; text-transform:uppercase;
+    text-align:center; justify-content:center;
+  }
+  .btn-primary{ background:var(--amber); color:var(--bg); border-color:var(--amber); }
+  .btn-primary:hover{ background:transparent; color:var(--amber); }
+  .btn-ghost{ color:var(--ink); }
+  .btn-ghost:hover{ border-color:var(--amber); color:var(--amber); }
+
+  /* page-load stagger */
+  .rise{ opacity:0; transform:translateY(14px); animation:riseIn 0.7s ease forwards; }
+  .rise.d1{ animation-delay:0.05s; } .rise.d2{ animation-delay:0.18s; }
+  .rise.d3{ animation-delay:0.32s; } .rise.d4{ animation-delay:0.46s; } .rise.d5{ animation-delay:0.6s; }
+  @keyframes riseIn{ to{ opacity:1; transform:translateY(0); } }
+
+  /* ---------- terminal window ---------- */
+  .terminal-window{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:6px; overflow:hidden;
+    box-shadow:0 30px 70px -25px rgba(0,0,0,0.7);
+    max-width:100%;
+  }
+  .terminal-bar{
+    display:flex; align-items:center; padding:0.7rem 1.1rem; border-bottom:1px solid var(--line);
+    background:var(--bg-raised);
+    gap:0.5rem;
+  }
+  .terminal-dot{
+    width:10px; height:10px; border-radius:50%; background:var(--alert);
+    box-shadow:18px 0 0 var(--amber), 36px 0 0 var(--signal);
+    flex-shrink:0;
+  }
+  .terminal-title{ margin-left:2.8rem; font-size:0.74rem; color:var(--ink-dim); letter-spacing:0.06em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .terminal-body{ padding:1.5rem 1.3rem; font-size:clamp(0.72rem, 2vw, 0.85rem); line-height:2.05; overflow-x:auto; }
+  .t-line{ overflow:hidden; white-space:nowrap; width:0; }
+  .t0{ animation:type0 .48s steps(16) .4s forwards; }
+  .t1{ animation:type1 .93s steps(31) 1.03s forwards; color:var(--ink-dim); }
+  .t2{ animation:type2 .81s steps(27) 2.11s forwards; color:var(--ink-dim); }
+  .t3{ animation:type3 .48s steps(16) 3.07s forwards; color:var(--signal); }
+  .t4{
+    color:var(--ink-dim);
+    animation:type4 1.11s steps(37) 3.7s forwards, blinkCursor 1s steps(1) 4.81s infinite;
+  }
+  @keyframes type0{ to{ width:16ch; } }
+  @keyframes type1{ to{ width:31ch; } }
+  @keyframes type2{ to{ width:27ch; } }
+  @keyframes type3{ to{ width:16ch; } }
+  @keyframes type4{ to{ width:37ch; } }
+  @keyframes blinkCursor{ 50%{ opacity:0.35; } }
+
+  /* ---------- module status strip ---------- */
+  .modules{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    border:1px solid var(--line); border-top:none;
+    margin:0 auto; max-width:1140px;
+  }
+  .module{ padding:1.9rem 1.7rem; border-left:1px solid var(--line); }
+  .module:first-child{ border-left:none; }
+  .module-head{ display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; }
+  .module-id{ font-size:0.72rem; color:var(--amber); letter-spacing:0.18em; font-weight:600; }
+  .module-dot{ width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 6px var(--signal); }
+  .module h3{
+    font-family:var(--font-display); font-weight:800; font-size:clamp(1.1rem, 3vw, 1.35rem);
+    text-transform:uppercase; letter-spacing:0.02em; margin-bottom:0.55rem;
+    word-break:break-word;
+  }
+  .module p{ color:var(--ink-dim); font-size:0.86rem; line-height:1.7; }
+
+  /* ---------- code blocks ---------- */
+  .code{
+    background:var(--bg-panel); border:1px solid var(--line); border-radius:4px;
+    padding:1.2rem 1.35rem; font-size:clamp(0.72rem, 2vw, 0.82rem); line-height:1.95; overflow-x:auto;
+    position:relative; margin:1.1rem 0;
+    -webkit-overflow-scrolling:touch;
+    max-width:100%;
+  }
+  .code-text{ display:block; white-space:pre; min-width:min-content; }
+  .code .c{ color:var(--ink-faint); }
+  .code .s{ color:var(--signal); }
+  .code .v{ color:var(--amber); }
+  .code-copy{
+    position:absolute; top:0.6rem; right:0.6rem; font-family:var(--font-mono);
+    font-size:0.62rem; letter-spacing:0.14em; color:var(--ink-dim); background:var(--bg-raised);
+    border:1px solid var(--line); padding:0.3rem 0.65rem; cursor:pointer; text-transform:uppercase;
+    transition:color .2s, border-color .2s;
+    z-index:2;
+  }
+  .code-copy:hover{ color:var(--amber); border-color:var(--amber); }
+
+  /* ---------- redaction ---------- */
+  .redact{
+    background:#000; color:#000; border-radius:2px; padding:0 0.3em; cursor:pointer;
+    transition:color .25s, background .25s; user-select:none;
+  }
+  .redact:hover, .redact:focus-visible, .redact.is-revealed{
+    background:var(--amber-dim); color:var(--amber);
+  }
+  .redact-hint{ font-size:0.74rem; color:var(--ink-faint); letter-spacing:0.03em; margin-top:0.4rem; }
+  .redact-hint .k{ color:var(--ink-dim); }
+
+  /* ---------- callout ---------- */
+  .callout{
+    display:flex; gap:0.85rem; align-items:flex-start; padding:1rem 1.2rem;
+    border:1px solid var(--alert); background:rgba(224,71,60,0.06); margin-top:1.1rem; font-size:0.83rem;
+  }
+  .callout .tag{ color:var(--alert); font-weight:700; letter-spacing:0.08em; flex-shrink:0; }
+  .callout p{ color:var(--ink-dim); line-height:1.75; }
+  .callout p .k{ color:var(--ink); }
+
+  /* ---------- phases (setup) ---------- */
+  .phase{ display:grid; grid-template-columns:7rem 1fr; gap:2.2rem; padding:2.8rem 0; border-top:1px solid var(--line-soft); }
+  .phase:first-child{ border-top:none; padding-top:0; }
+  .phase-num{
+    font-family:var(--font-display); font-weight:900; font-size:3.6rem; line-height:1;
+    color:var(--amber); opacity:0.9;
+  }
+  .phase-num span{ display:block; font-size:0.9rem; font-weight:600; letter-spacing:0.2em; color:var(--ink-faint); margin-top:0.4rem; }
+  .phase-body h3{
+    font-family:var(--font-display); font-weight:800; font-size:clamp(1.2rem, 4vw, 1.55rem); text-transform:uppercase;
+    letter-spacing:0.01em; margin-bottom:0.7rem;
+    word-break:break-word;
+  }
+  .phase-body > p{ color:var(--ink-dim); line-height:1.8; max-width:42rem; font-size:0.92rem; margin-bottom:0.3rem; }
+
+  /* ---------- proxy / opsec ---------- */
+  .risk{ display:flex; flex-direction:column; gap:1.1rem; margin:2.2rem 0 2.6rem; }
+  .risk-row{ display:grid; grid-template-columns:15rem 1fr 4.5rem; align-items:center; gap:1rem; font-size:0.8rem; }
+  .risk-label{ color:var(--ink); }
+  .risk-bar{ height:6px; background:var(--bg-panel); border:1px solid var(--line); position:relative; }
+  .risk-fill{ position:absolute; inset:0; }
+  .risk-fill.high{ width:88%; background:var(--alert); }
+  .risk-fill.low{ width:24%; background:var(--signal); }
+  .risk-value{ text-align:right; letter-spacing:0.12em; font-weight:700; font-size:0.74rem; }
+  .risk-value.high{ color:var(--alert); }
+  .risk-value.low{ color:var(--signal); }
+
+  .notes{ border-left:2px solid var(--amber); padding-left:1.6rem; margin-top:2.4rem; display:grid; gap:1.4rem; }
+  .note-label{ font-size:0.68rem; letter-spacing:0.24em; color:var(--amber); text-transform:uppercase; margin-bottom:0.35rem; font-weight:700; }
+  .note p{ color:var(--ink-dim); line-height:1.8; font-size:0.9rem; }
+  .note p .k{ color:var(--ink); }
+
+  /* ---------- usage ---------- */
+  .usage-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; margin-bottom:3.5rem; }
+  .file-card{ border:1px solid var(--line); padding:1.9rem; }
+  .file-card h3{
+    font-size:1rem; color:var(--amber); margin-bottom:0.9rem; display:flex; align-items:center; gap:0.6rem;
+    letter-spacing:0.04em;
+  }
+  .file-card h3::before{ content:"›"; color:var(--ink-faint); }
+  .file-card p{ color:var(--ink-dim); line-height:1.8; font-size:0.88rem; margin-bottom:1.1rem; }
+
+  .sub-eyebrow{ font-size:0.7rem; letter-spacing:0.28em; color:var(--ink-dim); text-transform:uppercase; margin-bottom:1.2rem; font-weight:600; }
+  .txlog{ border:1px solid var(--line); background:var(--bg-panel); }
+  .tx-row{
+    display:grid; grid-template-columns:6.5rem 1fr; gap:1.3rem; padding:1.05rem 1.5rem;
+    border-bottom:1px solid var(--line-soft); align-items:baseline;
+  }
+  .tx-row:last-child{ border-bottom:none; }
+  .tx-time{ font-size:0.76rem; color:var(--signal); }
+  .tx-desc{ font-size:0.9rem; color:var(--ink); line-height:1.6; }
+  .tx-desc .dim{ color:var(--ink-dim); }
+
+  /* ---------- config table ---------- */
+  .config-wrap{ overflow-x:auto; border:1px solid var(--line); -webkit-overflow-scrolling:touch; }
+  .config-table{ width:100%; border-collapse:collapse; font-size:0.84rem; min-width:640px; }
+  .config-table th{
+    text-align:left; padding:0.9rem 1.2rem; font-size:0.68rem; letter-spacing:0.2em;
+    color:var(--ink-dim); border-bottom:1px solid var(--line); text-transform:uppercase;
+    background:var(--bg-panel); font-weight:700;
+  }
+  .config-table td{ padding:1.05rem 1.2rem; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  .config-table tr:last-child td{ border-bottom:none; }
+  .config-table .var{ color:var(--amber); }
+  .config-table .default{ color:var(--ink-dim); }
+  .config-table .desc{ color:var(--ink); line-height:1.7; font-size:0.83rem; }
+
+  /* ---------- archive / file tree ---------- */
+  .archive-section{ padding-top:0; border-top:none; }
+
+  /* ---------- disclaimer ---------- */
+  .disclaimer{ display:flex; gap:2.6rem; align-items:center; flex-wrap:wrap; }
+  .stamp-big{
+    border:4px double var(--alert); color:var(--alert); font-family:var(--font-display);
+    font-weight:900; text-transform:uppercase; font-size:clamp(1rem, 4vw, 1.5rem); padding:1.1rem 1.6rem;
+    transform:rotate(-6deg); letter-spacing:0.06em; flex-shrink:0; opacity:0.9; text-align:center;
+    line-height:1.3;
+  }
+  .disclaimer-text{ color:var(--ink-dim); line-height:1.85; font-size:0.9rem; max-width:36rem; }
+  .disclaimer-text strong{ color:var(--ink); }
+
+  /* ---------- footer ---------- */
+  footer{
+    text-align:center; padding:3.5rem 1.5rem; color:var(--ink-faint); font-size:0.78rem;
+    letter-spacing:0.14em; border-top:1px solid var(--line);
+  }
+  footer .signal-off{ color:var(--ink-dim); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOBILE RESPONSIVE BREAKPOINTS
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Tablets and below (≤900px) */
+  @media (max-width:900px){
+    .hero-grid{ grid-template-columns:1fr; gap:2.5rem; }
+    .hero-terminal{ order:-1; }
+    .reticle{ display:none; }
+    .hero{ padding:3rem 1.5rem 4rem; }
+    .section{ padding:3.5rem 1.5rem; }
+    .modules{ grid-template-columns:1fr; }
+    .module{ border-left:none; border-top:1px solid var(--line); padding:1.5rem 1.3rem; }
+    .module:first-child{ border-top:none; }
+    .usage-grid{ grid-template-columns:1fr; }
+    .disclaimer{ flex-direction:column; text-align:center; gap:1.8rem; }
+    .stamp-big{ transform:rotate(-3deg); }
+  }
+
+  /* Small tablets and large phones (≤760px) */
+  @media (max-width:760px){
+    .topbar-inner{ padding:0.75rem 1rem; gap:0.6rem; }
+    .brand{ font-size:0.72rem; }
+    .tabs{ gap:1.1rem; font-size:0.7rem; }
+    .hero h1{ font-size:clamp(2rem, 10vw, 3.5rem); }
+    .lede{ font-size:0.9rem; }
+    .btn{ padding:0.75rem 1.4rem; font-size:0.78rem; width:100%; justify-content:center; }
+    .cta-row{ flex-direction:column; }
+    .section h2{ font-size:clamp(1.8rem, 6vw, 2.8rem); }
+    .phase{ grid-template-columns:1fr; gap:0.8rem; padding:2rem 0; }
+    .phase-num{ font-size:2.6rem; }
+    .phase-num span{ display:inline; margin-left:0.5rem; margin-top:0; }
+    .phase-body h3{ font-size:1.3rem; }
+    .code{ padding:1rem; font-size:0.75rem; }
+    .code-copy{ position:static; display:block; width:100%; margin-top:0.8rem; text-align:center; }
+    .risk-row{ grid-template-columns:1fr; gap:0.5rem; }
+    .risk-value{ text-align:left; }
+    .notes{ padding-left:1.2rem; }
+    .file-card{ padding:1.4rem; }
+    .tx-row{ grid-template-columns:1fr; gap:0.35rem; padding:0.9rem 1.2rem; }
+    .config-table th, .config-table td{ padding:0.8rem 0.9rem; }
+  }
+
+  /* Phones (≤480px) */
+  @media (max-width:480px){
+    body{ font-size:15px; }
+    .hero{ padding:2rem 1rem 3rem; }
+    .section{ padding:2.5rem 1rem; }
+    .topbar-inner{ padding:0.6rem 0.8rem; }
+    .brand{ gap:0.4rem; }
+    .status-dot{ width:6px; height:6px; }
+    .tabs{ gap:0.8rem; font-size:0.65rem; }
+    .hero h1{ font-size:clamp(1.7rem, 11vw, 2.5rem); line-height:1; }
+    .stamp{ font-size:0.6rem; padding:0.25rem 0.5rem; }
+    .stamp-row{ gap:0.4rem; }
+    .lede{ font-size:0.85rem; line-height:1.75; }
+    .terminal-body{ padding:1rem; }
+    .terminal-title{ margin-left:2rem; font-size:0.65rem; }
+    .terminal-dot{ width:8px; height:8px; box-shadow:14px 0 0 var(--amber), 28px 0 0 var(--signal); }
+    .module{ padding:1.2rem 1rem; }
+    .module h3{ font-size:1.1rem; }
+    .module p{ font-size:0.82rem; }
+    .phase{ padding:1.6rem 0; }
+    .phase-num{ font-size:2rem; }
+    .phase-body h3{ font-size:1.15rem; }
+    .phase-body > p{ font-size:0.88rem; }
+    .code{ padding:0.85rem; font-size:0.7rem; line-height:1.8; }
+    .callout{ flex-direction:column; gap:0.5rem; padding:0.85rem 1rem; font-size:0.8rem; }
+    .notes{ padding-left:1rem; gap:1rem; }
+    .note p{ font-size:0.85rem; }
+    .file-card{ padding:1.2rem; }
+    .file-card h3{ font-size:0.95rem; }
+    .file-card p{ font-size:0.84rem; }
+    .tx-row{ padding:0.8rem 1rem; }
+    .tx-time{ font-size:0.7rem; }
+    .tx-desc{ font-size:0.85rem; }
+    .disclaimer{ gap:1.4rem; }
+    .stamp-big{ font-size:1.1rem; padding:0.8rem 1.2rem; border-width:3px; }
+    .disclaimer-text{ font-size:0.85rem; }
+    footer{ padding:2.5rem 1rem; font-size:0.72rem; }
+  }
+
+  /* Very small phones (≤360px) */
+  @media (max-width:360px){
+    .hero h1{ font-size:1.5rem; }
+    .btn{ padding:0.65rem 1rem; font-size:0.72rem; }
+    .section h2{ font-size:1.5rem; }
+    .phase-num{ font-size:1.6rem; }
+    .terminal-title{ display:none; }
+    .terminal-bar{ justify-content:center; }
+  }
+
+  /* Landscape phones */
+  @media (max-height:500px) and (orientation:landscape){
+    .hero{ padding:1.5rem 1rem 2rem; }
+    .hero-grid{ gap:1.5rem; }
+    .reticle{ display:none; }
+  }
+
+  /* ---------- reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    .status-dot, .module-dot, .t4{ animation:none !important; }
+    .t-line{ width:auto !important; }
+    .rise{ animation:none !important; opacity:1 !important; transform:none !important; }
+    .reveal{ transition:none !important; opacity:1 !important; transform:none !important; }
+  }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+  <div class="grain" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>IG-AI-DM <span class="dim">// readme.dossier</span></span>
+      </div>
+      <nav class="tabs">
+        <a href="#setup" target="_self">01 · Setup</a>
+        <a href="#proxy" target="_self">02 · OpSec</a>
+        <a href="#usage" target="_self">03 · Usage</a>
+        <a href="#config" target="_self">04 · Config</a>
+        <a href="#archive" target="_self">05 · Archive</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <svg class="reticle" viewBox="0 0 200 200" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+      <circle cx="100" cy="100" r="98" fill="none" stroke="#F0A93E" stroke-width="0.6"/>
+      <circle cx="100" cy="100" r="70" fill="none" stroke="#F0A93E" stroke-width="0.6"/>
+      <circle cx="100" cy="100" r="40" fill="none" stroke="#5FE3A0" stroke-width="0.6"/>
+      <line x1="100" y1="0" x2="100" y2="200" stroke="#F0A93E" stroke-width="0.6"/>
+      <line x1="0" y1="100" x2="200" y2="100" stroke="#F0A93E" stroke-width="0.6"/>
+    </svg>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div class="stamp-row rise d1">
+          <span class="stamp">Unofficial API</span>
+          <span class="stamp stamp-alert">Educational Use Only</span>
+        </div>
+        <h1 class="rise d2">Instagram<br><span class="accent">AI DM Bot</span></h1>
+        <p class="lede rise d3">
+          A standing process that watches one Instagram thread, hands the full conversation
+          to an LLM for every reply, and keeps a memory of what's already been said —
+          built on <strong style="color:var(--ink)">instagrapi</strong> for session handling.
+        </p>
+        <div class="cta-row rise d4">
+          <a href="#setup" class="btn btn-primary" target="_self">Run Setup →</a>
+          <a href="#config" class="btn btn-ghost" target="_self">Config Reference</a>
+        </div>
+      </div>
+      <div class="hero-terminal rise d5">
+        <div class="terminal-window">
+          <div class="terminal-bar">
+            <span class="terminal-dot" aria-hidden="true"></span>
+            <span class="terminal-title">bot.py — session</span>
+          </div>
+          <div class="terminal-body">
+            <p class="t-line t0">$ python bot.py</p>
+            <p class="t-line t1">[*] loading session.json ... ok</p>
+            <p class="t-line t2">[+] instagrapi client ready</p>
+            <p class="t-line t3">[+] thread found</p>
+            <p class="t-line t4">[*] listening for inbound messages...<span aria-hidden="true">_</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MODULE STATUS ============ -->
+  <div class="modules reveal">
+    <div class="module">
+      <div class="module-head">
+        <span class="module-dot" aria-hidden="true"></span>
+        <span class="module-id">MOD.01</span>
+      </div>
+      <h3>LLM Replies</h3>
+      <p>Every reply is generated from the entire thread, so the conversation stays coherent across many turns instead of answering each message in isolation.</p>
+    </div>
+    <div class="module">
+      <div class="module-head">
+        <span class="module-dot" aria-hidden="true"></span>
+        <span class="module-id">MOD.02</span>
+      </div>
+      <h3>Conversation Memory</h3>
+      <p>Chat history is written to disk as it grows, so a restart picks up exactly where the conversation left off rather than starting cold.</p>
+    </div>
+    <div class="module">
+      <div class="module-head">
+        <span class="module-dot" aria-hidden="true"></span>
+        <span class="module-id">MOD.03</span>
+      </div>
+      <h3>Proxy Support</h3>
+      <p>Both scripts accept a proxy URL, so traffic for login and messaging can be routed to match the account's usual network footprint.</p>
+    </div>
+  </div>
+
+  <!-- ============ SETUP ============ -->
+  <section id="setup" class="section">
+    <div class="reveal">
+      <div class="eyebrow">Setup</div>
+      <h2>Get It Running</h2>
+      <p class="section-intro">
+        Five phases, run in order. Each one assumes the previous phase finished
+        cleanly — the bot won't start without a valid session, and it won't find
+        the right thread without a configured target.
+      </p>
+    </div>
+
+    <!-- Phase 1 -->
+    <div class="phase reveal">
+      <div class="phase-num">01<span>/ 05</span></div>
+      <div class="phase-body">
+        <h3>Clone the repository</h3>
+        <p>Pull the project down and move into its directory before installing anything.</p>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text"><span class="c"># clone the repo</span>
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase reveal">
+      <div class="phase-num">02<span>/ 05</span></div>
+      <div class="phase-body">
+        <h3>Install dependencies</h3>
+        <p>
+          <span class="v">instagrapi</span> is the unofficial Instagram client that handles
+          login, session storage, sending and receiving DMs, and proxy configuration.
+          <span class="v">requests</span> is used for the LLM API calls.
+        </p>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text"><span class="c"># required</span>
+pip install instagrapi
+
+<span class="c"># used for LLM calls</span>
+pip install requests</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase reveal">
+      <div class="phase-num">03<span>/ 05</span></div>
+      <div class="phase-body">
+        <h3>Authenticate &amp; store the session</h3>
+        <p>
+          Open <span class="v">login.py</span>, drop in your account credentials, and run it once.
+          It writes an authenticated session to <span class="v">session.json</span> so the bot
+          doesn't need your password on every run.
+        </p>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text"><span class="c"># login.py</span>
+username = <span class="redact" tabindex="0" role="button" aria-pressed="false">"your_email@example.com"</span>
+password = <span class="redact" tabindex="0" role="button" aria-pressed="false">"YourPassword123"</span>
+
+<span class="c"># then run it</span>
+python login.py</span>
+        </div>
+        <p class="redact-hint"><span class="k">// tap or hover the blacked-out fields above</span> — that's how your real credentials should look in any screenshot you share.</p>
+
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text">🔐 Logging in...
+✅ Login successful!
+💾 Session dumped to session.json</span>
+        </div>
+
+        <div class="callout">
+          <span class="tag">WARN</span>
+          <p><span class="k">session.json</span> is a live credential. Never commit it to a public repo — add it to <span class="k">.gitignore</span> before your first commit.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 4 -->
+    <div class="phase reveal">
+      <div class="phase-num">04<span>/ 05</span></div>
+      <div class="phase-body">
+        <h3>Configure the bot</h3>
+        <p>
+          Open <span class="v">bot.py</span> and update the values at the top of the file.
+          At minimum, set <span class="v">TARGET_USER_ID</span> to the account the bot should
+          watch and reply to.
+        </p>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text">TARGET_USER_ID = <span class="v">99123456789</span>   <span class="c"># the IG user ID to chat with</span>
+POLL_INTERVAL  = <span class="v">3</span>           <span class="c"># seconds between message checks</span>
+MAX_MSG_LENGTH = <span class="v">900</span>         <span class="c"># max chars per DM (IG limit)</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase 5 -->
+    <div class="phase reveal">
+      <div class="phase-num">05<span>/ 05</span></div>
+      <div class="phase-body">
+        <h3>Start listening</h3>
+        <p>Loads the saved session, locates the target thread, and starts polling for new messages.</p>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text">python bot.py</span>
+        </div>
+        <div class="code">
+          <button class="code-copy" type="button">Copy</button>
+          <span class="code-text">🔍 Looking for DM thread with user...
+  ✅ Thread found: 340282366841710300000000000000000000
+  ℹ️  3 existing messages marked as read.
+
+🎧 Listening for new messages...
+============================================================</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROXY / OPSEC ============ -->
+  <section id="proxy" class="section">
+    <div class="reveal">
+      <div class="eyebrow">OpSec Briefing</div>
+      <h2>Proxy Configuration</h2>
+      <p class="section-intro">
+        Instagram watches for activity that doesn't look like a person on their phone.
+        A login or a steady stream of DMs from a server IP — especially one in a
+        different region from the account's usual logins — reads as automated and can
+        get the account temporarily locked or asked to verify.
+      </p>
+    </div>
+
+    <div class="reveal">
+      <div class="risk">
+        <div class="risk-row">
+          <span class="risk-label">No proxy, datacenter IP</span>
+          <div class="risk-bar"><div class="risk-fill high"></div></div>
+          <span class="risk-value high">Flagged often</span>
+        </div>
+        <div class="risk-row">
+          <span class="risk-label">Residential proxy, matched region</span>
+          <div class="risk-bar"><div class="risk-fill low"></div></div>
+          <span class="risk-value low">Rarely flagged</span>
+        </div>
+      </div>
+
+      <p class="section-intro" style="margin-bottom:1.4rem;">
+        Both <span class="v">login.py</span> and <span class="v">bot.py</span> have a
+        commented-out proxy line — each script opens its own <span class="v">Client()</span>,
+        so the proxy needs to be set in both places.
+      </p>
+
+      <div class="code">
+        <button class="code-copy" type="button">Copy</button>
+        <span class="code-text"><span class="c"># ─── login.py ───</span>
+
+cl = Client()
+cl.set_proxy(<span class="s">"http://ip:port"</span>)              <span class="c"># HTTP proxy</span>
+<span class="c"># cl.set_proxy("socks5://ip:port")        # SOCKS5</span>
+<span class="c"># cl.set_proxy("http://user:pass@ip:port") # authenticated</span>
+
+cl.login(username, password)</span>
+      </div>
+
+      <div class="code">
+        <button class="code-copy" type="button">Copy</button>
+        <span class="code-text"><span class="c"># ─── bot.py ───</span>
+
+PROXY = <span class="s">"http://ip:port"</span>
+
+cl = Client()
+cl.set_proxy(PROXY)
+<span class="c"># ... rest of setup</span></span>
+      </div>
+
+      <div class="notes">
+        <div class="note">
+          <div class="note-label">Field note 01</div>
+          <p><span class="k">Use a residential or mobile proxy.</span> Datacenter ranges are well known to Instagram's detection systems; residential IPs look like an ordinary home connection.</p>
+        </div>
+        <div class="note">
+          <div class="note-label">Field note 02</div>
+          <p><span class="k">Match the account's home region.</span> A proxy in the same country as the account's usual logins avoids "new location" warnings.</p>
+        </div>
+        <div class="note">
+          <div class="note-label">Field note 03</div>
+          <p><span class="k">Set it in both files.</span> <span class="v">login.py</span> and <span class="v">bot.py</span> each create their own client — a proxy in one doesn't carry over to the other.</p>
+        </div>
+        <div class="note">
+          <div class="note-label">Field note 04</div>
+          <p><span class="k">Slow the poll interval down.</span> 5–10 seconds between checks looks closer to a person glancing at their phone than a 1-second loop does.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ USAGE ============ -->
+  <section id="usage" class="section">
+    <div class="reveal">
+      <div class="eyebrow">Process</div>
+      <h2>How It Runs</h2>
+    </div>
+
+    <div class="usage-grid reveal">
+      <div class="file-card">
+        <h3>login.py</h3>
+        <p>Authenticates with Instagram and writes the session to <span class="v">session.json</span>. Run once, and again whenever the session expires.</p>
+        <div class="code" style="margin:0;">
+          <span class="code-text">python login.py</span>
+        </div>
+      </div>
+      <div class="file-card">
+        <h3>bot.py</h3>
+        <p>The long-running process. Loads the saved session, finds the target thread, and polls it for new messages to answer.</p>
+        <div class="code" style="margin:0;">
+          <span class="code-text">python bot.py</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <div class="sub-eyebrow">Transmission Log — one message cycle</div>
+      <div class="txlog">
+        <div class="tx-row">
+          <span class="tx-time">T+0.0s</span>
+          <span class="tx-desc">Poll fires — <span class="dim">thread checked for anything new</span></span>
+        </div>
+        <div class="tx-row">
+          <span class="tx-time">T+0.0s</span>
+          <span class="tx-desc">New text message detected <span class="dim">from the target user</span></span>
+        </div>
+        <div class="tx-row">
+          <span class="tx-time">T+0.1s</span>
+          <span class="tx-desc">Placeholder sent — <span class="dim">"🤔 AI is thinking…"</span></span>
+        </div>
+        <div class="tx-row">
+          <span class="tx-time">T+0.2s</span>
+          <span class="tx-desc">Full conversation history posted <span class="dim">to the LLM endpoint</span></span>
+        </div>
+        <div class="tx-row">
+          <span class="tx-time">T+1.4s</span>
+          <span class="tx-desc">Reply received <span class="dim">— chunked automatically if over 900 chars</span></span>
+        </div>
+        <div class="tx-row">
+          <span class="tx-time">T+1.5s</span>
+          <span class="tx-desc">Reply sent <span class="dim">and appended to memory for the next cycle</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONFIG ============ -->
+  <section id="config" class="section">
+    <div class="reveal">
+      <div class="eyebrow">Reference</div>
+      <h2>Configuration</h2>
+      <p class="section-intro">All configurable values, set at the top of <span class="v" style="color:var(--amber);">bot.py</span>.</p>
+    </div>
+
+    <div class="config-wrap reveal">
+      <table class="config-table">
+        <thead>
+          <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="var">TARGET_USER_ID</td>
+            <td class="default">—</td>
+            <td class="desc">Instagram user ID of the account the bot replies to</td>
+          </tr>
+          <tr>
+            <td class="var">PROXY</td>
+            <td class="default">commented out</td>
+            <td class="desc">HTTP / SOCKS5 proxy URL, e.g. "http://ip:port"</td>
+          </tr>
+          <tr>
+            <td class="var">LLM_API_URL</td>
+            <td class="default">OpenAI-compatible endpoint</td>
+            <td class="desc">Chat completions endpoint the bot sends conversation history to</td>
+          </tr>
+          <tr>
+            <td class="var">LLM_MODEL</td>
+            <td class="default">provider-defined</td>
+            <td class="desc">Model identifier passed to the LLM API</td>
+          </tr>
+          <tr>
+            <td class="var">SYSTEM_PROMPT</td>
+            <td class="default">—</td>
+            <td class="desc">Defines the AI's personality and how it should respond</td>
+          </tr>
+          <tr>
+            <td class="var">POLL_INTERVAL</td>
+            <td class="default">3</td>
+            <td class="desc">Seconds between each check for new messages</td>
+          </tr>
+          <tr>
+            <td class="var">MAX_MSG_LENGTH</td>
+            <td class="default">900</td>
+            <td class="desc">Max characters per DM — longer replies are split automatically</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ ARCHIVE / FILE STRUCTURE ============ -->
+  <section id="archive" class="section archive-section">
+    <div class="reveal">
+      <div class="eyebrow">Archive Contents</div>
+      <h2>File Structure</h2>
+      <div class="code">
+        <button class="code-copy" type="button">Copy</button>
+        <span class="code-text">📁 project/
+├── login.py          <span class="c"># authenticate &amp; save session</span>
+├── bot.py            <span class="c"># main bot — polls &amp; responds to DMs</span>
+├── session.json      <span class="c"># auto-generated session data (DO NOT COMMIT)</span>
+├── .gitignore        <span class="c"># include session.json here</span>
+└── README.html       <span class="c"># this file</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DISCLAIMER ============ -->
+  <section class="section">
+    <div class="disclaimer reveal">
+      <div class="stamp-big">Educational<br>Use Only</div>
+      <p class="disclaimer-text">
+        This project is for <strong>educational purposes only</strong>. Automating
+        Instagram interactions violates Instagram's Terms of Service and can result
+        in an account being temporarily or permanently banned. Use at your own risk —
+        the authors assume no liability for any consequences arising from the use of
+        this software.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <span class="signal-off">[ end of file — connection closed ]</span><br>
+    built with instagrapi + an OpenAI-compatible LLM API
+  </footer>
+
+  <script>
+    // Copy-to-clipboard for code blocks
+    document.querySelectorAll('.code-copy').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var codeEl = btn.closest('.code').querySelector('.code-text');
+        var text = codeEl.innerText;
+        navigator.clipboard.writeText(text).then(function(){
+          var original = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(function(){ btn.textContent = original; }, 1400);
+        });
+      });
+    });
+
+    // Redaction toggle (click / tap, in addition to hover/focus)
+    document.querySelectorAll('.redact').forEach(function(el){
+      el.addEventListener('click', function(){
+        var revealed = el.classList.toggle('is-revealed');
+        el.setAttribute('aria-pressed', revealed ? 'true' : 'false');
+      });
+    });
+
+    // Scroll-in reveal
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+  </script>
+
+</body>
+</html>

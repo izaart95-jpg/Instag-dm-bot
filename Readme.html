@@ -70,6 +70,17 @@
     -webkit-backdrop-filter:blur(10px);
     border-bottom:1px solid var(--line);
   }
+  .topbar::after{
+    content:''; position:absolute; left:0; bottom:-1px; width:100%; height:1px;
+    background:linear-gradient(90deg, transparent 0%, var(--signal) 50%, transparent 100%);
+    background-size:55% 100%; background-repeat:no-repeat;
+    opacity:0.6; pointer-events:none;
+    animation:scan-sweep 6s linear infinite;
+  }
+  @keyframes scan-sweep{
+    0%{ background-position:-55% 0; }
+    100%{ background-position:155% 0; }
+  }
   .topbar-inner{
     max-width:1140px; margin:0 auto; padding:0.95rem 1.5rem;
     display:flex; align-items:center; justify-content:space-between; gap:1rem;
@@ -83,10 +94,21 @@
   }
   @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.45; transform:scale(0.8); } }
   .brand .dim{ color:var(--ink-dim); }
+  .build-tag{
+    font-size:0.6rem; letter-spacing:0.2em; color:var(--ink-faint);
+    border:1px solid var(--line); padding:0.22rem 0.5rem; border-radius:2px;
+    text-transform:uppercase; font-weight:600; flex-shrink:0;
+  }
   .tabs{ display:flex; gap:1.6rem; font-size:0.78rem; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding-bottom:0.2rem; }
   .tabs::-webkit-scrollbar{ display:none; }
-  .tabs a{ color:var(--ink-dim); text-decoration:none; letter-spacing:0.08em; white-space:nowrap; transition:color .2s; padding:0.2rem 0; flex-shrink:0; }
-  .tabs a:hover{ color:var(--amber); }
+  .tabs a{
+    color:var(--ink-dim); text-decoration:none; letter-spacing:0.08em; white-space:nowrap; flex-shrink:0;
+    padding:0.2rem 0 0.35rem;
+    background-image:linear-gradient(var(--amber), var(--amber));
+    background-repeat:no-repeat; background-position:left bottom; background-size:0% 2px;
+    transition:color .25s, background-size .35s cubic-bezier(0.16,1,0.3,1);
+  }
+  .tabs a:hover, .tabs a.active{ color:var(--amber); background-size:100% 2px; }
 
   /* ---------- layout helpers ---------- */
   .section{ max-width:1140px; margin:0 auto; padding:5.5rem 1.5rem; border-top:1px solid var(--line); }
@@ -127,10 +149,17 @@
     font-family:var(--font-mono); font-size:0.82rem; letter-spacing:0.06em; font-weight:600;
     padding:0.85rem 1.7rem; border:1px solid var(--line); text-decoration:none;
     display:inline-flex; align-items:center; gap:0.5rem; transition:all .25s; text-transform:uppercase;
-    text-align:center; justify-content:center;
+    text-align:center; justify-content:center; position:relative; overflow:hidden;
   }
   .btn-primary{ background:var(--amber); color:var(--bg); border-color:var(--amber); }
   .btn-primary:hover{ background:transparent; color:var(--amber); }
+  .btn-primary::before{
+    content:''; position:absolute; top:0; left:-75%; width:50%; height:100%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,0.45), transparent);
+    transform:skewX(-20deg); pointer-events:none;
+  }
+  .btn-primary:hover::before{ animation:btn-shine .85s ease; }
+  @keyframes btn-shine{ from{ left:-75%; } to{ left:125%; } }
   .btn-ghost{ color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--amber); color:var(--amber); }
 
@@ -184,7 +213,12 @@
   .module:first-child{ border-left:none; }
   .module-head{ display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; }
   .module-id{ font-size:0.72rem; color:var(--amber); letter-spacing:0.18em; font-weight:600; }
-  .module-dot{ width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 6px var(--signal); }
+  .module-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--signal); box-shadow:0 0 6px var(--signal);
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  .module:nth-child(2) .module-dot{ animation-delay:0.4s; }
+  .module:nth-child(3) .module-dot{ animation-delay:0.8s; }
   .module h3{
     font-family:var(--font-display); font-weight:800; font-size:clamp(1.1rem, 3vw, 1.35rem);
     text-transform:uppercase; letter-spacing:0.02em; margin-bottom:0.55rem;
@@ -199,7 +233,9 @@
     position:relative; margin:1.1rem 0;
     -webkit-overflow-scrolling:touch;
     max-width:100%;
+    transition:border-color .3s ease, box-shadow .3s ease;
   }
+  .code:hover{ border-color:var(--ink-faint); box-shadow:0 0 0 1px var(--line-soft) inset; }
   .code-text{ display:block; white-space:pre; min-width:min-content; }
   .code .c{ color:var(--ink-faint); }
   .code .s{ color:var(--signal); }
@@ -252,10 +288,12 @@
   .risk{ display:flex; flex-direction:column; gap:1.1rem; margin:2.2rem 0 2.6rem; }
   .risk-row{ display:grid; grid-template-columns:15rem 1fr 4.5rem; align-items:center; gap:1rem; font-size:0.8rem; }
   .risk-label{ color:var(--ink); }
-  .risk-bar{ height:6px; background:var(--bg-panel); border:1px solid var(--line); position:relative; }
-  .risk-fill{ position:absolute; inset:0; }
-  .risk-fill.high{ width:88%; background:var(--alert); }
-  .risk-fill.low{ width:24%; background:var(--signal); }
+  .risk-bar{ height:6px; background:var(--bg-panel); border:1px solid var(--line); position:relative; overflow:hidden; }
+  .risk-fill{ position:absolute; inset:0; width:0%; transition:width 1.3s cubic-bezier(0.16,1,0.3,1); }
+  .risk-fill.high{ background:var(--alert); }
+  .risk-fill.low{ background:var(--signal); }
+  .reveal.in-view .risk-fill.high{ width:88%; transition-delay:0.15s; }
+  .reveal.in-view .risk-fill.low{ width:24%; transition-delay:0.35s; }
   .risk-value{ text-align:right; letter-spacing:0.12em; font-weight:700; font-size:0.74rem; }
   .risk-value.high{ color:var(--alert); }
   .risk-value.low{ color:var(--signal); }
@@ -267,7 +305,14 @@
 
   /* ---------- usage ---------- */
   .usage-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; margin-bottom:3.5rem; }
-  .file-card{ border:1px solid var(--line); padding:1.9rem; }
+  .file-card{
+    border:1px solid var(--line); padding:1.9rem;
+    transition:border-color .35s ease, transform .35s ease, box-shadow .35s ease;
+  }
+  .file-card:hover{
+    border-color:var(--amber); transform:translateY(-4px);
+    box-shadow:0 18px 40px -24px rgba(240,169,62,0.4);
+  }
   .file-card h3{
     font-size:1rem; color:var(--amber); margin-bottom:0.9rem; display:flex; align-items:center; gap:0.6rem;
     letter-spacing:0.04em;
@@ -355,7 +400,6 @@
     .phase-num span{ display:inline; margin-left:0.5rem; margin-top:0; }
     .phase-body h3{ font-size:1.3rem; }
     .code{ padding:1rem; font-size:0.75rem; }
-    .code-copy{ position:static; display:block; width:100%; margin-top:0.8rem; text-align:center; }
     .risk-row{ grid-template-columns:1fr; gap:0.5rem; }
     .risk-value{ text-align:left; }
     .notes{ padding-left:1.2rem; }
@@ -411,6 +455,7 @@
     .phase-num{ font-size:1.6rem; }
     .terminal-title{ display:none; }
     .terminal-bar{ justify-content:center; }
+    .build-tag{ display:none; }
   }
 
   /* Landscape phones */
@@ -427,6 +472,9 @@
     .t-line{ width:auto !important; }
     .rise{ animation:none !important; opacity:1 !important; transform:none !important; }
     .reveal{ transition:none !important; opacity:1 !important; transform:none !important; }
+    .topbar::after, .btn-primary::before{ animation:none !important; }
+    .risk-fill{ transition:none !important; }
+    .file-card{ transition:none !important; }
   }
 </style>
 <base target="_blank">
@@ -443,6 +491,7 @@
       <div class="brand">
         <span class="status-dot" aria-hidden="true"></span>
         <span>IG-AI-DM <span class="dim">LLM Bot</span></span>
+        <span class="build-tag">v2.4.1</span>
       </div>
       <nav class="tabs">
         <a href="#setup" target="_self">01 · Setup</a>
@@ -905,6 +954,24 @@ cl.set_proxy(PROXY)
       });
     }, { threshold: 0.12 });
     document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+
+    // Scroll-spy: highlight the nav tab for the section currently in view
+    var navLinks = Array.prototype.slice.call(document.querySelectorAll('.tabs a'));
+    var spySections = navLinks
+      .map(function(link){ return document.querySelector(link.getAttribute('href')); })
+      .filter(Boolean);
+    if (spySections.length) {
+      var spy = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if (!entry.isIntersecting) return;
+          var match = navLinks.filter(function(l){ return l.getAttribute('href') === '#' + entry.target.id; })[0];
+          if (!match) return;
+          navLinks.forEach(function(l){ l.classList.remove('active'); });
+          match.classList.add('active');
+        });
+      }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+      spySections.forEach(function(sec){ spy.observe(sec); });
+    }
   </script>
 
 </body>
